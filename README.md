@@ -46,9 +46,9 @@ The evaluation matrix includes the following metrics:
 - **Mean Average Precision (mAP)**: The mean of the average precision scores for each query, providing a comprehensive measure of retrieval performance. This metric is used to measure the performance of the INRIA dataset.
 
 - **N-S Score**: 
-    <div style="text-align: center;">
-      <img alt="N-S Score" src="img/eq1.png">
-    </div>
+    <p align="center">
+        <img alt="N-S Score" src="images/eq1.png">
+    </p>
 
 
     Where:
