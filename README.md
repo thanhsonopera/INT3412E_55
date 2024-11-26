@@ -44,10 +44,9 @@ The evaluation matrix is used to assess the performance of image retrieval algor
 
 The evaluation matrix includes the following metrics:
 - **Mean Average Precision (mAP)**: The mean of the average precision scores for each query, providing a comprehensive measure of retrieval performance. This metric is used to measure the performance of the INRIA dataset.
+
 - **N-S Score**: 
-<div style="text-align: center;">
-  <img alt="N-S Score" src="https://latex.codecogs.com/png.latex?\text{N-S Score} = \frac{1}{N} \sum_{i=1}^{N} R(i)">
-</div>
+![N-S Score](https://latex.codecogs.com/png.latex?\text{N-S%20Score}%20=%20\frac{1}{N}%20\sum_{i=1}^{N}%20R(i))
 
 
   Where:
