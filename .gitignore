@@ -1,4 +1,4 @@
 __pycache__/
 datasets/INRIA/*
 datasets/UKB/*
-!datasets/INRIA/.gitkeep
+!datasets/.gitkeep
