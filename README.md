@@ -48,6 +48,8 @@ The evaluation matrix includes the following metrics:
 <div style="text-align: center;">
   <img alt="N-S Score" src="https://latex.codecogs.com/png.latex?\text{N-S Score} = \frac{1}{N} \sum_{i=1}^{N} R(i)">
 </div>
+
+
   Where:
-  - \( N \) is the total number of items.
-  - \( R(i) \) is the relevance score of item \( i \).
+  - N is the total number of items.
+  - R(i) is the relevance score of query i th.
