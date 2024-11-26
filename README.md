@@ -47,7 +47,7 @@ The evaluation matrix includes the following metrics:
 
 - **N-S Score**: 
     <p align="center">
-        <img alt="N-S Score" src="images/eq1.png">
+        <img alt="N-S Score" src="img/eq1.png">
     </p>
 
 
