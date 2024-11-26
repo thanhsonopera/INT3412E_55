@@ -36,3 +36,18 @@ datasets/
     └── overview.html
 
 ```
+# Evaluation Matrix
+## Overview
+
+The evaluation matrix is used to assess the performance of image retrieval algorithms. It provides various metrics to evaluate the accuracy and efficiency of the retrieval process.
+## Metrics
+
+The evaluation matrix includes the following metrics:
+- **Mean Average Precision (mAP)**: The mean of the average precision scores for each query, providing a comprehensive measure of retrieval performance. This metric is used to measure the performance of the INRIA dataset.
+- **N-S Score**: 
+<div style="text-align: center;">
+  <img alt="N-S Score" src="https://latex.codecogs.com/png.latex?\text{N-S Score} = \frac{1}{N} \sum_{i=1}^{N} R(i)">
+</div>
+  Where:
+  - \( N \) is the total number of items.
+  - \( R(i) \) is the relevance score of item \( i \).
