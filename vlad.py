@@ -1,9 +1,6 @@
-import cv2
-import os
 import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
-# from keras.callbacks import TensorBoard
 from random import sample
 from numpy.linalg import norm
 
@@ -23,7 +20,7 @@ class VLAD:
         self.norming = norming
         self.vocabs = None
         self.centers = None
-        self.database = None
+        self.databases = None
         self.lcs = lcs
         self.alpha = alpha
         self.qs = None
@@ -68,7 +65,7 @@ class VLAD:
                         X_mat[predicted == j]).components_
                     qsi.append(q)
                 self.qs.append(qsi)
-        self.database = self._extract_vlads(X)
+        self.databases = self._extract_vlads(X)
         return self
 
     def transform(self, X):
@@ -128,7 +125,7 @@ class VLAD:
                                                                                 .reshape(-1, X.shape[1])))
             self.centers.append(self.vocabs[i].cluster_centers_)
 
-        self.database = self._extract_vlads(X)
+        self.databases = self._extract_vlads(X)
         return self
 
     def predict(self, desc):
@@ -155,12 +152,12 @@ class VLAD:
 
         Returns
         -------
-        ``self.database @ vlad``
+        ``self.databases @ vlad``
             The similarity for all database-classes
         """
         vlad = self._vlad(desc)  # Convert to VLAD-descriptor
         # Similarity between L2-normed vectors is defined as dot-product
-        return self.database @ vlad
+        return self.databases @ vlad
 
     def _vlad(self, X):
         """Construct the actual VLAD-descriptor from a matrix of local descriptors
@@ -251,7 +248,7 @@ class VLAD:
         -------
         ``None``
         """
-        self.database = np.vstack((self.database, vlad))
+        self.databases = np.vstack((self.databases, vlad))
 
     def _power_law_norm(self, X):
         """Perform power-Normalization on a given array

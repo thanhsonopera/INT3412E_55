@@ -4,8 +4,8 @@ from sklearn.cluster import KMeans
 
 class ADC:
     ''' 
-        Parameters
-        ----------
+    Args:
+    ----------
         kmeans: List[] 
             Danh sách models KMeans
         X : List[], Shape(N, d)
@@ -67,9 +67,8 @@ class ADC:
         return np.argmin(self.predict_proba(X))
 
     def predict_proba(self, X):
-        '''
-            Parameters
-            ----------
+        """
+        Args:
             X : np array, Shape = (d, )
             LuT : Shape = (k, m) 
                 Look up Table
@@ -79,11 +78,11 @@ class ADC:
                 Khoảng cách subvectorj đến center ij
             databases : np Array, Shape(N, m)
                 Giá trị sau khi Quantized của X
-            Returns
-            ----------
+
+        Returns:
             output : np array, Shape = (N, )
                 Kết quả dự đoán
-        '''
+        """
         x = X.reshape(1, self.m, -1)
         distances = x - self.centers
         # LuT = np.sum(distances * distances, axis=2)

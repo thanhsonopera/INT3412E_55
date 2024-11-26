@@ -34,8 +34,7 @@ class FisherVector:
 
     def fisher_vector(self, X):
         """
-            Parameters
-            ----------
+        Args:
             X : List[], shape = (N, D) 
             D : int,
                 Số chiều của Local Descriptors như SIFT = 128
@@ -45,12 +44,12 @@ class FisherVector:
                 ----
             k : int,
                 n_components của GMM    
-            Returns
-            -------
-                Paper
+
+        Returns:
+            Paper:
                 Modeling Spatial Layout with Fisher Vectors for Image Categorization.  
                 weight + mean + variance : np array, shape (K + 2 * D * K, ) 
-                Paper 
+
                 Aggregating local descriptors into a compact image representation 
                 mean : np array, shape = (D * k, )
         """

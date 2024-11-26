@@ -6,8 +6,8 @@ from random import sample
 
 class BOF:
     """
-        Parameters
-        ----------
+
+    Args:
         N : int,
             Số lượng samples Database
         X : List[[[]]] shape (N, n_descriptors, n_dimensions)
