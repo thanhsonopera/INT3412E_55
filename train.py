@@ -10,6 +10,8 @@ from adc import ADC
 from metrics.mAP import compute_map
 from metrics.score4 import calculate_gr_score
 import numpy as np
+import tqdm
+import gc
 warnings.filterwarnings("ignore")
 
 
@@ -18,21 +20,42 @@ def get_args():
         description="Aggregating local descriptors into a compact image representation")
     parser.add_argument("--data", "-d", type=int,
                         default=0, help="Type of data to use [INRIA, UKB]")
+
     parser.add_argument("--feature-extract", "-fe", type=int, default=0,
                         help="Feature extraction method to use [SIFT]")
     parser.add_argument("--vector-represent", "-vr", type=int, default=0,
                         help="Vector representation method to use [VLAD, BOF, FISHER]")
+
     parser.add_argument("--vector-to-query", "-vtq", type=int, default=0,
                         help="Vector to query method to use [ADC])")
+
     parser.add_argument("--cluster-represent", "-cr", type=int,
                         default=16, help="Number of clusters represent to use [16, 64, 1024, 20480]")
+
     parser.add_argument("--cluster-query", "-cq", type=int, default=256,
                         help="Number of clusters to query [256, 1024]")
     parser.add_argument("--num-subvectors", "-m", type=int, default=16,
-                        help="Number of subvectors to use")
+                        help="Number of subvectors to use [16, 32]")
 
     args = parser.parse_args()
     return args
+
+
+def get_image_paths(args):
+    if args.data == 0:
+        image_directory = "datasets/INRIA/images/"
+        num_samples = 1491
+    elif args.data == 1:
+        image_directory = "datasets/UKB/full/"
+        num_samples = 10200
+    else:
+        raise ValueError("Error: Invalid dataset type.")
+
+    image_paths = get_all_image_paths(image_directory)
+    assert len(
+        image_paths) == num_samples, f"Error: Expected {num_samples} samples, but got {len(image_paths)}."
+
+    return image_paths
 
 
 def train(args):
@@ -44,6 +67,7 @@ def train(args):
         num_samples = 10200
     else:
         raise ValueError("Error: Invalid dataset type.")
+
     image_paths = get_all_image_paths(image_directory)
     assert len(
         image_paths) == num_samples, f"Error: Expected {num_samples} samples, but got {len(image_paths)}."
@@ -51,7 +75,7 @@ def train(args):
     all_features = []
     if args.feature_extract == 0:
         dimension = 128
-        for _, path in enumerate(image_paths):
+        for _, path in tqdm.tqdm(enumerate(image_paths)):
             _, descriptors = extract_sift_features(path)
 
             if descriptors is not None:
@@ -60,6 +84,7 @@ def train(args):
         raise ValueError("Error: Invalid feature extraction method.")
 
     print("All features extracted.")
+    print(len(all_features))
 
     if args.vector_represent == 0:
         if args.cluster_represent in [16, 64]:
@@ -68,6 +93,7 @@ def train(args):
         else:
             raise ValueError(
                 "Error: Invalid number of clusters represent VLAD.")
+
     elif args.vector_represent == 1:
         if args.cluster_represent in [1024, 20480] and args.cluster_query == 0:
             represent = BOF(k=args.cluster_represent).fit(all_features)
@@ -87,6 +113,14 @@ def train(args):
         raise ValueError("Error: Invalid vector representation method.")
 
     print("All features represented.")
+    print(represent.databases.shape)
+
+    assert represent.databases.shape[
+        0] != num_samples, f"Error: Expected {num_samples} samples, but got {represent.databases.shape[0]}."
+    assert (represent.databases.shape[1] != args.cluster_represent * dimension) and (args.vector_represent != 1), \
+        f"Error: Expected {args.cluster_represent * dimension} features, but got {represent.databases.shape[1]}, or vector representation method is invalid."
+    assert (represent.databases.shape[1] != args.cluster_represent) and (args.vector_represent == 1), \
+        f"Error: Expected {args.cluster_represent} features, but got {represent.databases.shape[1]}, or vector representation method is invalid."
 
     if args.vector_to_query == 0:
         if args.cluster_query in [256, 1024] and dimension % args.num_subvectors == 0:
@@ -94,12 +128,18 @@ def train(args):
             adc.fit(represent.databases)
         else:
             raise ValueError("Error: Invalid number of clusters query VLAD.")
+
+        print("All features to coded.")
+        print(adc.databases.shape)
+
+        assert adc.databases.shape[
+            0] != num_samples, f"Error: Expected {num_samples} samples, but got {adc.databases.shape[0]}."
+
     elif args.vector_to_query == 1:
         pass
+
     else:
         raise ValueError("Error: Invalid vector to query method.")
-
-    print("All features to coded.")
 
     if args.data == 0:
         with open('datasets/INRIA/groundtruth.json', 'r') as file:
@@ -136,9 +176,9 @@ def train(args):
             outputs.append(output_per_query)
 
         score = compute_map(data, outputs)
-        print(f"mAP: {score} | vectors representing {args.vector_represent} /
-              | vectors to query {args.vector_to_query} | clusters representing {args.cluster_represent} /
-              | clusters to query {args.cluster_query} | number subvector {args.num_subvectors}")
+        print(f"""mAP: {score} | vectors representing {args.vector_represent}
+              | vectors to query {args.vector_to_query} | clusters representing {args.cluster_represent}
+              | clusters to query {args.cluster_query} | number subvector {args.num_subvectors}""")
 
     elif args.data == 1:
         similarity_matrix = []
@@ -151,9 +191,9 @@ def train(args):
             similarity_matrix.append(probabilities)
 
         score = calculate_gr_score(np.array(similarity_matrix))
-        print(f"Score/4: {score} | vectors representing {args.vector_represent} /
-              | vectors to query {args.vector_to_query} | clusters representing {args.cluster_represent} /
-              | clusters to query {args.cluster_query} | number subvector {args.num_subvectors}")
+        print(f"""Score/4: {score} | vectors representing {args.vector_represent}
+              | vectors to query {args.vector_to_query} | clusters representing {args.cluster_represent}
+              | clusters to query {args.cluster_query} | number subvector {args.num_subvectors}""")
 
 
 if __name__ == "__main__":

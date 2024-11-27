@@ -112,9 +112,20 @@ class ADC:
 
 # reconstructed_vector = np.hstack(
 #     [codebooks[idx, i] for i, idx in enumerate(indices)])
+
 # print(reconstructed_vector.shape)
 # print(np.sum(reconstructed_vector - reconstructed_vector.reshape(1, 80).reshape(16, 5)))
+
 # print(X_test - reconstructed_vector.reshape(1, 80))
 # print(adc.transform(
 #     X_test - reconstructed_vector.reshape((1, -1))
 # ))
+
+# X = np.random.randint(size=(1000, 80), low=0, high=10)
+
+# model = KMeans(n_clusters=8).fit(X)
+# center = model.cluster_centers_
+
+# predict = model.predict(X)
+# q_y = center[predict]
+# print(center.shape, predict.shape, q_y.shape)

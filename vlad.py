@@ -40,7 +40,7 @@ class VLAD:
             Fitted object
         """
         X_mat = np.vstack(X)
-        print(X_mat.shape[1])
+        print(X_mat.shape)
         self.vocabs = []
         self.centers = []  # Is a list of `n_vocabs` np.arrays. Can be set externally without fitting
         self.qs = []  # Is a list of `n_vocabs` lists of length `k` of np.arrays. Can be set externally without fitting
