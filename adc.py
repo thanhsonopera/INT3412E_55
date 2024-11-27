@@ -1,12 +1,14 @@
 import numpy as np
 from sklearn.cluster import KMeans
+import os
+import pickle
 
 
 class ADC:
-    ''' 
+    '''
     Args:
     ----------
-        kmeans: List[] 
+        kmeans: List[]
             Danh sách models KMeans
         X : List[], Shape(N, d)
             Input
@@ -16,11 +18,11 @@ class ADC:
             Số lượng Subvectors
         k : int, [256, 1024]
             Số lượng cụm tạo từ điển
-        bs : int, log2(k) 
+        bs : int, log2(k)
             Số bit của mỗi Subvectors
         d : int,
             Số chiều Vector biểu diễn Local Descriptors
-        d / m : int, 
+        d / m : int,
             Số chiều của mỗi Subvectors
     '''
 
@@ -52,13 +54,11 @@ class ADC:
         for i in range(self.m):
             if self.bs <= 8:
                 storage.append(self.kmeans[i].
-                               predict(X[:, int(i * (d / self.m))
-                                       : int((i + 1) * (d / self.m))])
+                               predict(X[:, int(i * (d / self.m)): int((i + 1) * (d / self.m))])
                                .astype(np.uint8).reshape(-1, 1))
             else:
                 storage.append(self.kmeans[i].
-                               predict(X[:, int(i * (d / self.m))
-                                       : int((i + 1) * (d / self.m))])
+                               predict(X[:, int(i * (d / self.m)): int((i + 1) * (d / self.m))])
                                .astype(np.uint16).reshape(-1, 1))
 
         return np.hstack(storage)
@@ -70,7 +70,7 @@ class ADC:
         """
         Args:
             X : np array, Shape = (d, )
-            LuT : Shape = (k, m) 
+            LuT : Shape = (k, m)
                 Look up Table
             centers : np array, Shape = (k, m, d/m)
                 Tập hợp k giá trị cluster cho từng subvector
@@ -96,36 +96,23 @@ class ADC:
         self._train(X)
         return self.databases
 
+    def save_model(self, dataset):
+        if not os.path.exists("checkpoint"):
+            os.makedirs("checkpoint")
+        adc_checkpoint_path = os.path.join(
+            "checkpoint", "adc_k{}_m{}_ds{}".format(self.k, self.m, dataset))
+        if not os.path.exists(adc_checkpoint_path):
+            os.makedirs(adc_checkpoint_path)
+        np.savez_compressed(adc_checkpoint_path + "/data.npz",
+                            databases=self.databases, centers=self.centers)
 
-# X = np.random.randint(size=(1000, 80), low=0, high=10)
-# adc = ADC()
-# # print(X)
-# adc._train(X)
-# print(adc.transform(X).shape)
+        with open(adc_checkpoint_path + "/vocabs.pkl", "wb") as f:
+            pickle.dump(self.kmeans, f)
 
-# X_test = np.random.randint(size=(1, 80), low=0, high=10)
-
-# indices = adc.transform(X_test)
-# # codebooks = shape [k, m, len]
-# codebooks = adc.centers
-# print(indices.shape, codebooks.shape)
-
-# reconstructed_vector = np.hstack(
-#     [codebooks[idx, i] for i, idx in enumerate(indices)])
-
-# print(reconstructed_vector.shape)
-# print(np.sum(reconstructed_vector - reconstructed_vector.reshape(1, 80).reshape(16, 5)))
-
-# print(X_test - reconstructed_vector.reshape(1, 80))
-# print(adc.transform(
-#     X_test - reconstructed_vector.reshape((1, -1))
-# ))
-
-# X = np.random.randint(size=(1000, 80), low=0, high=10)
-
-# model = KMeans(n_clusters=8).fit(X)
-# center = model.cluster_centers_
-
-# predict = model.predict(X)
-# q_y = center[predict]
-# print(center.shape, predict.shape, q_y.shape)
+    def load_model(self, path):
+        data = np.load(path + "data.npz", allow_pickle=True)
+        with open(path + "vocabs.pkl", "rb") as f:
+            vocabs = pickle.load(f)
+        self.databases = data["databases"]
+        self.centers = data["centers"]
+        self.kmeans = vocabs

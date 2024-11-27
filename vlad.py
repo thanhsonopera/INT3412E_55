@@ -3,6 +3,8 @@ from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from random import sample
 from numpy.linalg import norm
+import os
+import pickle
 
 
 class VLAD:
@@ -265,6 +267,28 @@ class VLAD:
         """
         normed = np.sign(X) * np.abs(X)**self.alpha
         return normed
+
+    def save_model(self, dataset):
+        if not os.path.exists("checkpoint"):
+            os.makedirs("checkpoint")
+        vlad_checkpoint_path = os.path.join(
+            "checkpoint", "vlad_k{}_ds{}".format(self.k, dataset))
+        if not os.path.exists(vlad_checkpoint_path):
+            os.makedirs(vlad_checkpoint_path)
+        np.savez_compressed(vlad_checkpoint_path + "/data.npz",
+                            databases=self.databases, qs=self.qs, centers=self.centers)
+        with open(vlad_checkpoint_path + "/vocabs.pkl", "wb") as f:
+            pickle.dump(self.vocabs, f)
+
+    def load_model(self, path):
+        data = np.load(path + "data.npz", allow_pickle=True)
+        with open(path + "vocabs.pkl", "rb") as f:
+            vocabs = pickle.load(f)
+        self.databases = data["databases"]
+        self.qs = data["qs"]
+        self.centers = data["centers"]
+        self.vocabs = vocabs
+        # return data['databases'], data['qs'], data['centers'], vocabs
 
     def __repr__(self):
         return f"VLAD(k={self.k}, norming=\"{self.norming}\")"
