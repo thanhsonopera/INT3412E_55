@@ -2,4 +2,4 @@ __pycache__/
 datasets/INRIA/*
 datasets/UKB/*
 !datasets/INRIA/.gitkeep
-!*.ipynb
+*.ipynb
