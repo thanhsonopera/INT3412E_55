@@ -121,58 +121,95 @@ def query():
 
     if not result:
         return jsonify({'error': 'Không tìm được model tương thích'}), 500
+    adc = adc_get_param(g.adc, path_query)
+
     if re == 1:
         vlad = vlad_get_param(g.vlad, path_img_repre)
+        if vlad.k / adc.m > 2 or vlad.k / adc.m < 1:
+            return jsonify({'error': 'Không tìm được model tương thích'}), 500
         print(vlad.databases.shape, vlad.k)
     elif re == 2:
         bof = bof_get_param(g.bof, path_img_repre)
+        if bof.k / adc.k == 1 or bof.k / adc.k > 20:
+            return jsonify({'error': 'Không tìm được model tương thích'}), 500
         print(bof.databases.shape, bof.k)
     elif re == 3:
         fish = fish_get_param(g.fish, path_img_repre)
+        if (fish.n_components / adc.m > 2) or (fish.n_components / adc.m < 1):
+            return jsonify({'error': 'Không tìm được model tương thích'}), 500
         print(fish.databases.shape, fish.n_components)
-    adc = adc_get_param(g.adc, path_query)
-    import json
-    from ultis import get_all_image_paths, extract_sift_features
-    image_directory = "datasets/INRIA/images/"
+    if dataset == 1:
+        import json
+        from ultis import get_all_image_paths, extract_sift_features
+        image_directory = "datasets/INRIA/images/"
 
-    image_paths = get_all_image_paths(image_directory)
-    with open('datasets/INRIA/groundtruth.json', 'r') as file:
-        data = json.load(file)
+        image_paths = get_all_image_paths(image_directory)
+        with open('datasets/INRIA/groundtruth.json', 'r') as file:
+            data = json.load(file)
+            for key in data:
+                new_similar = []
+                for img in data[key]['similar']:
+                    for idx, path in enumerate(image_paths):
+                        if img in path:
+                            new_similar.append(idx)
+                data[key]['similar'] = new_similar
+
+        outputs = []
         for key in data:
-            new_similar = []
-            for img in data[key]['similar']:
-                for idx, path in enumerate(image_paths):
-                    if img in path:
-                        new_similar.append(idx)
-            data[key]['similar'] = new_similar
+            path = 'datasets/INRIA/images/' + data[key]['query']
+            key_points, descriptors = extract_sift_features(path)
+            if re == 1:
+                query_vlad = vlad.transform([descriptors])
 
-    outputs = []
-    for key in data:
-        path = 'datasets/INRIA/images/' + data[key]['query']
-        key_points, descriptors = extract_sift_features(path)
-        query_vlad = vlad.transform([descriptors])
+                probabilities = adc.predict_proba(query_vlad)
+            elif re == 2:
+                query_bof = bof.transform([descriptors])
+                probabilities = adc.predict_proba(query_bof)
+            elif re == 3:
+                query_fish = fish.transform([descriptors])
+                probabilities = adc.predict_proba(query_fish)
+            sorted_indices = np.argsort(probabilities)
 
-        probabilities = adc.predict_proba(query_vlad)
+            output_per_query = []
+            for i, index in enumerate(sorted_indices):
+                print(
+                    f"Original index: {index}, Probability: {probabilities[index]}")
+                if i > 0:
+                    output_per_query.append(index)
 
-        sorted_indices = np.argsort(probabilities)
+                    if len(output_per_query) == 30:
+                        break
 
-        output_per_query = []
-        for i, index in enumerate(sorted_indices):
-            print(
-                f"Original index: {index}, Probability: {probabilities[index]}")
-            if i > 0:
-                output_per_query.append(index)
-                # if len(output_per_query) == len(data[key]['similar']):
-                #     break
-                if len(output_per_query) == 30:
-                    break
+            outputs.append(output_per_query)
 
-        outputs.append(output_per_query)
+        from metrics.mAP import compute_map
+        results = compute_map(data, outputs)
+        print(results)
+    else:
+        from ultis import get_all_image_paths, extract_sift_features
+        image_directory = "datasets/INRIA/images/"
 
-    from metrics.mAP import compute_map
-    results = compute_map(data, outputs)
-    print(results)
+        image_paths = get_all_image_paths(image_directory)
+        from metrics.score4 import calculate_gr_score
+        print('Running')
+        similarity_matrix = []
+        for path in image_paths:
+            key_points, descriptors = extract_sift_features(path)
 
+            if re == 1:
+                query_vlad = vlad.transform([descriptors])
+                probabilities = adc.predict_proba(query_vlad)
+            elif re == 2:
+                query_bof = bof.transform([descriptors])
+                probabilities = adc.predict_proba(query_bof)
+            elif re == 3:
+                query_fish = fish.transform([descriptors])
+                probabilities = adc.predict_proba(query_fish)
+
+            similarity_matrix.append(probabilities)
+
+        result = calculate_gr_score(np.array(similarity_matrix))
+        print(result)
     try:
         image_bytes = base64.b64decode(image_data)
         image = Image.open(io.BytesIO(image_bytes))
