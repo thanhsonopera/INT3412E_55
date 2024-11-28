@@ -96,11 +96,11 @@ class ADC:
         self._train(X)
         return self.databases
 
-    def save_model(self, dataset):
+    def save_model(self, dataset, type_represent):
         if not os.path.exists("checkpoint"):
             os.makedirs("checkpoint")
         adc_checkpoint_path = os.path.join(
-            "checkpoint", "adc_k{}_m{}_ds{}".format(self.k, self.m, dataset))
+            "checkpoint", "adc_k{}_m{}_ds{}_re{}".format(self.k, self.m, dataset, type_represent))
         if not os.path.exists(adc_checkpoint_path):
             os.makedirs(adc_checkpoint_path)
         np.savez_compressed(adc_checkpoint_path + "/data.npz",

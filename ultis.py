@@ -1,5 +1,6 @@
 import os
 import cv2
+import numpy as np
 
 
 def get_all_image_paths(directory):
@@ -36,3 +37,15 @@ def extract_sift_features(image_path):
     sift = cv2.SIFT_create()
     key_points, descriptors = sift.detectAndCompute(image, None)
     return key_points, descriptors
+
+
+def save_all_features(all_features, dataset):
+    if not os.path.exists("checkpoint"):
+        os.makedirs("checkpoint")
+    np.savez_compressed("checkpoint/dataset_{}.npz".format(dataset),
+                        *all_features)
+
+
+def load_dataset(path):
+    data = np.load(path)
+    return [data[f"arr_{i}"] for i in range(len(data.files))]

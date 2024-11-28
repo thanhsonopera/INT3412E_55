@@ -41,23 +41,6 @@ def get_args():
     return args
 
 
-def get_image_paths(args):
-    if args.data == 0:
-        image_directory = "datasets/INRIA/images/"
-        num_samples = 1491
-    elif args.data == 1:
-        image_directory = "datasets/UKB/full/"
-        num_samples = 10200
-    else:
-        raise ValueError("Error: Invalid dataset type.")
-
-    image_paths = get_all_image_paths(image_directory)
-    assert len(
-        image_paths) == num_samples, f"Error: Expected {num_samples} samples, but got {len(image_paths)}."
-
-    return image_paths
-
-
 def train(args):
     if args.data == 0:
         image_directory = "datasets/INRIA/images/"
@@ -85,7 +68,6 @@ def train(args):
 
     print("All features extracted.")
     print(len(all_features))
-
     if args.vector_represent == 0:
         if args.cluster_represent in [16, 64]:
             represent = VLAD(

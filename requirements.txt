@@ -3,3 +3,6 @@ scikit-learn
 opencv-python
 matplotlib
 tqdm
+flask
+flask_cors
+pytz

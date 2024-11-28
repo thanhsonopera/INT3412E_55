@@ -2,6 +2,8 @@ from sklearn.cluster import KMeans
 import numpy as np
 from sklearn.preprocessing import normalize
 from random import sample
+import os
+import pickle
 
 
 class BOF:
@@ -77,14 +79,28 @@ class BOF:
         self._build(X)
         return self.databases
 
+    def save_model(self, dataset):
+        if not os.path.exists("checkpoint"):
+            os.makedirs("checkpoint")
 
-# X = []
-# for _ in range(20):
-#     X.append(np.random.randint(low=0, high=100, size=(100, 50)))
-# bof = BOF(k=10)
-# bof._build(X)
+        bof_checkpoint_path = os.path.join(
+            "checkpoint", "bof_k{}_ds{}".format(self.k, dataset))
 
-# print(bof.transform(X[0]))
-# # arr = np.array([[1, 2, 3]])
-# # print(arr / np.sqrt(np.sum(np.power(arr, 2))),
-# #       normalize(arr, norm='l2', axis=1))
+        if not os.path.exists(bof_checkpoint_path):
+            os.makedirs(bof_checkpoint_path)
+
+        np.savez_compressed(bof_checkpoint_path + "/data.npz",
+                            databases=self.databases, centers=self.centers, idf=self.idf)
+
+        with open(bof_checkpoint_path + "/vocabs.pkl", "wb") as f:
+            pickle.dump(self.kmeans, f)
+
+    def load_model(self, path):
+        data = np.load(path + "data.npz", allow_pickle=True)
+        with open(path + "vocabs.pkl", "rb") as f:
+            vocabs = pickle.load(f)
+
+        self.databases = data["databases"]
+        self.centers = data["centers"]
+        self.idf = data["idf"]
+        self.kmeans = vocabs

@@ -2,6 +2,8 @@ import numpy as np
 from sklearn.mixture import GaussianMixture as GMM
 from sklearn.preprocessing import StandardScaler
 from random import sample
+import os
+import pickle
 
 
 class FisherVector:
@@ -91,14 +93,31 @@ class FisherVector:
         self._build(X)
         return self.transform(X)
 
+    def save_model(self, dataset):
+        if not os.path.exists("checkpoint"):
+            os.makedirs("checkpoint")
 
-# fs = FisherVector()
+        fish_checkpoint_path = os.path.join(
+            "checkpoint", "fish_k{}_ds{}".format(self.n_components, dataset))
 
-# X = []
+        if not os.path.exists(fish_checkpoint_path):
+            os.makedirs(fish_checkpoint_path)
 
-# for i in range(1000):
-#     X.append(np.random.randint(low=0, high=1000, size=(500, 128)))
+        np.savez_compressed(fish_checkpoint_path + "/data.npz",
+                            databases=self.databases)
 
-# fs.fit(X)
-# print(fs.databases.shape)
-# print(fs.fit_transform([X[0]]).shape)
+        with open(fish_checkpoint_path + "/gmm.pkl", "wb") as f:
+            pickle.dump(self.gmm, f)
+        with open(fish_checkpoint_path + "/scaler.pkl", "wb") as f:
+            pickle.dump(self.scaler, f)
+
+    def load_model(self, path):
+        data = np.load(path + "data.npz", allow_pickle=True)
+        with open(path + "gmm.pkl", "rb") as f:
+            gmm = pickle.load(f)
+        with open(path + "scaler.pkl", "rb") as f:
+            scaler = pickle.load(f)
+
+        self.databases = data['databases']
+        self.gmm = gmm
+        self.scaler = scaler
