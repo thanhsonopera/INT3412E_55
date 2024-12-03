@@ -1,66 +1,86 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Upload Image</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Image Search</title>
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <h2>Upload Image</h2>
-    <form
-      id="uploadForm"
-      action="http://127.0.0.1:5000/query"
-      method="post"
-      enctype="multipart/form-data"
-    >
-      Select image to upload:
-      <input type="file" name="image" id="image" />
-      <br />
-      Model Image Representation:
-      <select id="img_repre">
-        <option value="vlad_k16">VLAD k = 16</option>
-        <option value="vlad_k64">VLAD k = 64</option>
-        <option value="bof_k1024">BOF k = 1024</option>
-        <option value="bof_k20480">BOF k = 20480</option>
-        <option value="fish_k16">Fisher Kernel k = 16</option>
-        <option value="fish_k64">Fisher Kernel k = 64</option>
-      </select>
-      <br />
-      Dataset
-      <select id="dataset">
-        <option value="1">INRIA</option>
-        <option value="2">UKB</option>
-      </select>
-      <br />
-      Query
-      <select id="query">
-        <option value="adc_k256_m16">ADC k = 256 m = 16</option>
-        <option value="adc_k1024_m32">ADC k = 1024 m = 32</option>
-      </select>
-      <br />
-      <button id="btn">Submit</button>
-    </form>
-    <img style="width: 100px; height: 100px" />
-    <div
-      id="image-grid"
-      style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px"
-    ></div>
+    <div class="container">
+      <h1>Group</h1>
+      <form
+        id="uploadForm"
+        action="http://127.0.0.1:5000/query"
+        method="post"
+        enctype="multipart/form-data"
+      >
+        <div class="form-group">
+          <label for="imageUpload">Select image to upload:</label>
+          <input type="file" id="imageUpload" name="imageUpload" />
+        </div>
+        <div class="form-group">
+          <label for="modelRepresentation">Model Image Representation:</label>
+          <select id="modelRepresentation" name="modelRepresentation">
+            <option value="vlad_k16">VLAD k = 16</option>
+            <option value="vlad_k64">VLAD k = 64</option>
+            <option value="bof_k1024">BOF k = 1024</option>
+            <option value="bof_k20480">BOF k = 20480</option>
+            <option value="fish_k16">Fisher Kernel k = 16</option>
+            <option value="fish_k64">Fisher Kernel k = 64</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="dataset">Dataset:</label>
+          <select id="dataset" name="dataset">
+            <option value="1">INRIA</option>
+            <option value="2">UKB</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="query">Model Query:</label>
+          <select id="query" name="query">
+            <option value="adc_k256_m16">ADC k = 256 m = 16</option>
+            <option value="adc_k1024_m32">ADC k = 1024 m = 32</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-submit">Submit</button>
+      </form>
+      <!-- Gallery mặc định ẩn -->
+      <img
+        alt="Uploaded Image"
+        style="
+          width: 100%;
+          height: 500px;
+          object-fit: contain;
+          padding-top: 16px;
+          display: none;
+        "
+        id="image_search"
+      />
+      <div class="gallery" style="display: none" id="gallery">
+        <div class="result-images" id="image_search_result"></div>
+      </div>
+    </div>
 
     <script>
-      let img = document.querySelector("img");
-      let Element = document.getElementById("image");
-      Element.addEventListener("change", function (event) {
-        let url = URL.createObjectURL(Element.files[0]);
+      let img = document.getElementById("image_search");
+      let imageUpload = document.getElementById("imageUpload");
+      imageUpload.addEventListener("change", function (event) {
+        img.style.display = "block";
+        let url = URL.createObjectURL(imageUpload.files[0]);
         img.src = url;
-        console.log("11");
       });
       const displayImages = async (images) => {
-        const grid = document.getElementById("image-grid");
+        const gallery = document.getElementById("gallery");
+        gallery.style.display = "block";
+        const grid = document.getElementById("image_search_result");
         grid.innerHTML = "";
 
         images.forEach((base64String) => {
           const img = document.createElement("img");
-          img.src = `data:image/jpeg;base64,${base64String}`; // Tạo src từ Base64
-          img.style.width = "100%"; // Đáp ứng theo kích thước grid
-          grid.appendChild(img); // Thêm ảnh vào grid
+          img.src = `data:image/jpeg;base64,${base64String}`;
+          grid.appendChild(img);
         });
       };
       document.getElementById("uploadForm").onsubmit = async function (event) {
@@ -69,9 +89,9 @@
 
         const form = event.target;
         const formData = new FormData(form);
-        const file = formData.get("image");
+        const file = formData.get("imageUpload");
 
-        const imgRepre = document.getElementById("img_repre").value;
+        const imgRepre = document.getElementById("modelRepresentation").value;
         const dataset = document.getElementById("dataset").value;
         const query = document.getElementById("query").value;
 
